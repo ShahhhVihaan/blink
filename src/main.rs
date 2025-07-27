@@ -132,6 +132,24 @@ impl ApplicationHandler for App {
                     self.mouse_pressed = state == winit::event::ElementState::Pressed;
                 }
             }
+            WindowEvent::MouseWheel { delta, .. } => {
+                // Handle zoom with mouse wheel
+                let zoom_speed = 0.5;
+                match delta {
+                    winit::event::MouseScrollDelta::LineDelta(_, y) => {
+                        // Move camera forward/backward based on scroll
+                        let zoom_delta = y * zoom_speed;
+                        self.camera.position.z -= zoom_delta;
+                    }
+                    winit::event::MouseScrollDelta::PixelDelta(pos) => {
+                        // Alternative pixel-based scrolling
+                        let zoom_delta = pos.y as f32 * zoom_speed * 0.01;
+                        self.camera.position.z -= zoom_delta;
+                    }
+                }
+                // Request redraw after zoom
+                self.window.as_ref().unwrap().request_redraw();
+            }
             _ => (),
         }
     }
