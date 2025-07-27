@@ -13,6 +13,7 @@ struct App {
     queue: Option<Queue>,
     config: Option<SurfaceConfiguration>,
     camera: Camera,
+    mouse_pressed: bool,
     render_pipeline: Option<wgpu::RenderPipeline>,
     vertex_buffer: Option<wgpu::Buffer>,
     index_buffer: Option<wgpu::Buffer>,
@@ -87,10 +88,13 @@ struct Uniforms {
     view_proj: [[f32; 4]; 4],
 }
 
+
+
 impl ApplicationHandler for App {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
         let window = event_loop.create_window(Window::default_attributes()).unwrap();
         self.window = Some(window);
+        self.mouse_pressed = false;
         
         // Initialize graphics
         self.init_graphics();
@@ -123,6 +127,11 @@ impl ApplicationHandler for App {
                 // Request redraw after resize
                 self.window.as_ref().unwrap().request_redraw();
             }
+            WindowEvent::MouseInput { state, button, .. } => {
+                if button == winit::event::MouseButton::Left {
+                    self.mouse_pressed = state == winit::event::ElementState::Pressed;
+                }
+            }
             _ => (),
         }
     }
@@ -130,10 +139,9 @@ impl ApplicationHandler for App {
     fn device_event(&mut self, _event_loop: &ActiveEventLoop, _device_id: winit::event::DeviceId, event: DeviceEvent) {
         match event {
             DeviceEvent::MouseMotion { delta } => {
-                // Simple camera rotation with mouse
+                // Only rotate camera when left mouse button is held
                 if let Some(_window) = &self.window {
-                    // For now, always allow camera movement
-                    {
+                    if self.mouse_pressed {
                         let sensitivity = 0.01;
                         let delta_x = delta.0 as f32 * sensitivity;
                         let delta_y = delta.1 as f32 * sensitivity;
